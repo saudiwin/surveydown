@@ -436,7 +436,7 @@ sd_question <- function(
   valid_types <- c(
     "select", "mc", "mc_multiple", "mc_buttons", "mc_multiple_buttons",
     "text", "textarea", "numeric", "slider", "slider_numeric", "date",
-    "daterange", "matrix"
+    "daterange", "matrix", "textAddOn"
   )
 
   # Define types that require options
@@ -730,29 +730,6 @@ sd_question <- function(
 
   } else if (type == "slider") {
 
-      # selected cannot be FALSE for this widget
-
-      if(is.logical(selected)) selected <- NULL
-
-    output <- shinyWidgets::sliderTextInput(
-      inputId      = id,
-      label        = label,
-      choices      = option,
-      selected     = selected,
-      force_edges  = force_edges,
-      grid         = grid,
-      animate      = FALSE,
-      hide_min_max = FALSE,
-      from_fixed   = FALSE,
-      to_fixed     = FALSE,
-      from_min     = NULL,
-      from_max     = NULL,
-      to_min       = NULL,
-      to_max       = NULL,
-      pre          = NULL,
-      post         = NULL,
-      dragRange    = TRUE
-    )
       # Extract display labels and values
       display_labels <- names(option)
       values <- unname(option)

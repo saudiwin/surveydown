@@ -231,9 +231,16 @@ sd_server <- function(
             # Filter out fields with empty values unless explicitly changed
             valid_fields <- character(0)
             for (field in fields) {
-                if (!is.null(data_list[[field]]) && data_list[[field]] != "") {
+
+                outcome <- try({
+
+                    if (!is.null(data_list[[field]]) && data_list[[field]] != "") {
                     valid_fields <- c(valid_fields, field)
-                }
+                    }
+                })
+
+                if('try-error' %in% class(outcome)) browser()
+
             }
             fields <- valid_fields
         } else {

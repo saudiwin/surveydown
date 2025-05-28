@@ -594,6 +594,7 @@ sd_question <- function(
                 %s
             });
 
+
             // Equalize button widths when the document is ready
             $(document).ready(function() {
               setTimeout(function() {
@@ -633,6 +634,7 @@ sd_question <- function(
             $(document).on('click', '#%s .btn', function() {
                 %s
             });
+
 
             // Equalize button widths when the document is ready
             $(document).ready(function() {
@@ -1643,9 +1645,15 @@ sd_display_value <- function(id, display_type = "inline", wrapper = NULL, ...) {
 #' Output Function for Displaying reactive objects and values
 #'
 #' @param id Character string. A unique identifier for the output element.
-#' @param type Character string. Specifies the type of output. Can be
-#'   `"question"`, `"value"`, or `NULL.` If `NULL`, the function behaves like
-#'   `shiny::uiOutput()`.
+#' @param type Character string. Specifies the type of output corresponding
+#'   with the question `id`. Can be `"question"`, `"value"`, `"label_option"`,
+#'    `"label_question"`, or `NULL.` If `"question"`, it will display a
+#'    question defined in the server. If `"value"`, it will display the value
+#'    of question `id` selected by the respondent. If `"label_option"`, it will
+#'    display the label of the option for question `id` selected by the
+#'    respondent. If `"label_question"`, it will display the `label` argument
+#'    value for question `id`. Finally, if `NULL`, the function behaves like
+#'    `shiny::uiOutput()`.
 #' @param width Character string. The width of the UI element. Defaults to
 #'   `"100%"`.
 #' @param display Character string. Specifies the display type for `"value"`

@@ -730,18 +730,14 @@ sd_question <- function(
       ...
     )
     
-    # Add simple interaction tracking for numeric inputs
+    # Add interaction tracking for numeric inputs
     output <- shiny::tagAppendChild(output, shiny::tags$script(htmltools::HTML(sprintf("
-        console.log('Adding numeric interaction tracking for: %s');
         $(document).ready(function() {
-            console.log('Document ready for numeric: %s');
-            // Simple immediate tracking
             $('#%s').on('focus input change', function() {
-                console.log('Numeric interaction for %s');
                 Shiny.setInputValue('%s_interacted', true, {priority: 'event'});
             });
         });
-    ", id, id, id, id, id))))
+    ", id, id))))
 
   } else if (type == "slider") {
 
@@ -803,13 +799,8 @@ sd_question <- function(
 
       # JavaScript to map the display label back to the stored value and track interaction
       js_convert <- sprintf("
-      console.log('Adding slider interaction tracking for: %s');
       $(document).ready(function() {
-        console.log('Document ready for slider: %s');
-        
-        // Always handle value mapping and track interaction on user events
         $('#%s').on('focus mousedown change', function(e) {
-          console.log('Slider interaction for %s');
           var valueMap = %s;
           var currentLabel = $(this).val();
 
@@ -822,7 +813,7 @@ sd_question <- function(
           Shiny.setInputValue('%s', valueMap[currentLabel]);
         });
       });
-    ", id, id, id, id, jsonlite::toJSON(as.list(value_map)), id, id)
+    ", id, jsonlite::toJSON(as.list(value_map)), id, id)
 
       output <- shiny::tagAppendChild(
           output,
@@ -859,13 +850,9 @@ sd_question <- function(
       if (is_range) {
           # Add JavaScript to force a manual string representation of the range
           js_range_handler <- sprintf("
-      console.log('Adding slider_numeric range tracking for: %s');
       $(document).ready(function() {
-        console.log('Document ready for slider_numeric range: %s');
-        
         // Track interaction on mousedown/focus
         $('#%s').on('mousedown focus', function() {
-          console.log('Slider numeric range interaction for %s');
           Shiny.setInputValue('%s_interacted', true, {priority: 'event'});
         });
         
@@ -878,7 +865,7 @@ sd_question <- function(
           }
         });
       });
-    ", id, id, id, id, id, id, id)
+    ", id, id, id, id)
 
           output <- shiny::tagAppendChild(
               output,
@@ -900,16 +887,12 @@ sd_question <- function(
       } else {
           # For single sliders, just track interaction
           js_single_handler <- sprintf("
-      console.log('Adding slider_numeric single tracking for: %s');
       $(document).ready(function() {
-        console.log('Document ready for slider_numeric single: %s');
-        
         $('#%s').on('mousedown focus', function() {
-          console.log('Slider numeric single interaction for %s');
           Shiny.setInputValue('%s_interacted', true, {priority: 'event'});
         });
       });
-    ", id, id, id, id, id)
+    ", id, id)
 
           output <- shiny::tagAppendChild(
               output,

@@ -592,30 +592,12 @@ sd_question <- function(
     output <- shiny::tagAppendChild(output, shiny::tags$script(htmltools::HTML(sprintf("
             $(document).on('click', '#%s .btn', function() {
                 %s
+                // Get the selected value from the active button
+                var selectedValue = $('#%s .btn.active').attr('data-value');
+                if (selectedValue === undefined) selectedValue = null;
+                Shiny.setInputValue('%s', selectedValue, {priority: 'event'});
             });
-
-
-            // Equalize button widths when the document is ready
-            $(document).ready(function() {
-              setTimeout(function() {
-                var buttons = $('#%s .btn');
-                var maxWidth = 0;
-
-                // Find the maximum width
-                buttons.each(function() {
-                  var width = $(this).outerWidth();
-                  if (width > maxWidth) {
-                    maxWidth = width;
-                  }
-                });
-
-                // Set all buttons to the maximum width
-                buttons.each(function() {
-                  $(this).css('width', maxWidth + 'px');
-                });
-              }, 100); // Small delay to ensure all styles are applied
-            });
-        ", id, js_interaction, id))))
+        ", id, js_interaction))))
 
   } else if (type == "mc_multiple_buttons") {
 
@@ -626,7 +608,6 @@ sd_question <- function(
       direction  = direction,
       individual = individual,
       justified  = FALSE,
-      selected = selected,
       ...
     )
 
@@ -634,57 +615,7 @@ sd_question <- function(
             $(document).on('click', '#%s .btn', function() {
                 %s
             });
-
-
-            // Equalize button widths when the document is ready
-            $(document).ready(function() {
-              setTimeout(function() {
-                var buttons = $('#%s .btn');
-                var maxWidth = 0;
-
-                // Find the maximum width
-                buttons.each(function() {
-                  var width = $(this).outerWidth();
-                  if (width > maxWidth) {
-                    maxWidth = width;
-                  }
-                });
-
-                // Set all buttons to the maximum width
-                buttons.each(function() {
-                  $(this).css('width', maxWidth + 'px');
-                });
-              }, 100); // Small delay to ensure all styles are applied
-            });
-        ", id, js_interaction, id))))
-
-  } else if(type == "rank_list") {
-
-      output <- rank_list_survey(
-          input_id    = id,
-          text      = label,
-          labels    = list_name_md_to_html(option),
-          options= sortsurvey::sortable_options(direction  = direction)
-      )
-
-  } else if (type=="bucket_list") {
-
-      bucket_list_survey(
-          header = label,
-          group_name = id,
-          add_rank_list(
-              text = "Drag from here",
-              labels = list_name_md_to_html(option)
-          ),
-          add_rank_list(
-              text = "to here",
-              labels = NULL
-          ),output_width="100%",
-          output_height="100%",
-          options= sortsurvey::sortable_options(direction  = direction),
-          # NOTE: direction doesn't seem to work in bucket list questions
-          orientation=direction)
-
+        ", id, js_interaction))))
   } else if (type == "text") {
 
     output <- shiny::textInput(

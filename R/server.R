@@ -239,7 +239,7 @@ sd_server <- function(
                     }
                 })
 
-                if('try-error' %in% class(outcome)) browser()
+                #if('try-error' %in% class(outcome)) browser()
 
             }
             fields <- valid_fields

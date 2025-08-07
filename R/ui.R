@@ -65,9 +65,6 @@ sd_ui <- function() {
   # Get paths to files and create '_survey' folder if necessary
   paths <- get_paths()
 
-  # Create settings YAML file from survey.qmd YAML metadata
-  create_settings_yaml(paths)
-
   # Render the 'survey.qmd' file if changes detected
   if (survey_needs_updating(paths)) {
     message("Changes detected...rendering survey files...")
@@ -84,6 +81,9 @@ sd_ui <- function() {
     # If no changes, just load head content from '_survey/head.rds'
     head_content <- readRDS(paths$target_head)
   }
+
+  # Create settings YAML file from survey.qmd YAML metadata
+  create_settings_yaml(paths, metadata)
 
   # Create the UI
   shiny::tagList(
@@ -746,7 +746,7 @@ sd_question <- function(
         var questionType = '%s';
         var hasInteracted = false;
         var params = %s;
-        
+
         // Auto-save function for untouched questions
         function autoSaveQuestion() {
           // Check if user has already interacted with this question
@@ -755,12 +755,12 @@ sd_question <- function(
             // Question was already interacted with, don't auto-save
             return;
           }
-          
+
           // Double-check by looking at actual DOM changes for sliders
           if (questionType === 'slider' || questionType === 'slider_numeric_single') {
             var currentElement = $('#' + questionId);
             var initialValue = currentElement.data('initial-value');
-            
+
             // If we stored an initial value and current value differs, user interacted
             if (initialValue !== undefined) {
               var currentValue = currentElement.val();
@@ -770,9 +770,9 @@ sd_question <- function(
               }
             }
           }
-          
+
           var valueToSave = null;
-          
+
           // Handle different question types - use stored defaults, not current DOM values
           if (questionType === 'slider') {
             // Use the original default value from params, not current DOM value
@@ -790,18 +790,18 @@ sd_question <- function(
             // For date inputs, try multiple ways to get the value
             var dateElement = $('#' + questionId);
             var inputElement = dateElement.find('input[type=\"text\"]');
-            
+
             // Try different methods to get the date value
-            valueToSave = inputElement.val() || 
-                         dateElement.val() || 
-                         dateElement.attr('data-date') || 
+            valueToSave = inputElement.val() ||
+                         dateElement.val() ||
+                         dateElement.attr('data-date') ||
                          dateElement.find('input').val() || '';
           } else if (questionType === 'daterange') {
             // For date range inputs, get both start and end dates
             var container = $('#' + questionId);
             var startDate = container.find('input').eq(0).val() || '';
             var endDate = container.find('input').eq(1).val() || '';
-            
+
             // Join with comma and space to match expected format: 2025-06-17, 2025-06-18
             if (startDate && endDate) {
               valueToSave = startDate + ', ' + endDate;
@@ -811,7 +811,7 @@ sd_question <- function(
               valueToSave = '';
             }
           }
-          
+
           // Mark as interacted and save value with timestamp trigger
           Shiny.setInputValue(questionId + '_interacted', true, {priority: 'event'});
           if (valueToSave !== null && valueToSave !== '') {
@@ -819,11 +819,11 @@ sd_question <- function(
           }
           // Force timestamp update by sending a separate autosave timestamp signal
           Shiny.setInputValue(questionId + '_autosave_timestamp', Date.now(), {priority: 'event'});
-          
+
           // Clear gray highlighting since this question is now interacted
           clearQuestionHighlighting(questionId);
         }
-        
+
         // Function to clear highlighting for this specific question
         function clearQuestionHighlighting(questionId) {
           // Find question container using multiple strategies
@@ -837,7 +837,7 @@ sd_question <- function(
               questionContainer = input.closest('.question-container, .form-group, .shiny-input-container');
             }
           }
-          
+
           if (questionContainer.length > 0) {
             // Remove all highlighting classes
             questionContainer.removeClass('unanswered-question-highlight unanswered-question-highlight-orange unanswered-question-highlight-green unanswered-question-highlight-purple unanswered-question-highlight-gray required-question-highlight');
@@ -845,19 +845,19 @@ sd_question <- function(
             questionContainer.find('.form-control, input, select, textarea').removeClass('unanswered-question-highlight unanswered-question-highlight-orange unanswered-question-highlight-green unanswered-question-highlight-purple unanswered-question-highlight-gray required-question-highlight');
           }
         }
-        
+
         // Mark as interacted when user actually interacts
         window['markInteracted_' + questionId] = function() {
           hasInteracted = true;
         };
-        
+
         // Store initial values for sliders to detect changes and bind additional interaction events
         if (questionType === 'slider' || questionType === 'slider_numeric_single') {
           setTimeout(function() {
             var element = $('#' + questionId);
             if (element.length > 0) {
               element.data('initial-value', element.val());
-              
+
               // Additional interaction tracking for edge cases
               element.on('input change slide slidechange', function() {
                 hasInteracted = true;
@@ -877,14 +877,14 @@ sd_question <- function(
             }
           }, 100);
         }
-        
+
         // Listen for Next and Close button clicks
         $(document).on('click', '.sd-enter-button', function(e) {
           if ($(this).attr('onclick') && $(this).attr('onclick').includes('next_page')) {
             autoSaveQuestion();
           }
         });
-        
+
         $(document).on('click', '#close-survey-button', function(e) {
           autoSaveQuestion();
         });
@@ -1045,24 +1045,24 @@ sd_question <- function(
             $('#%s').on('focus input change', function() {
                 Shiny.setInputValue('%s_interacted', true, {priority: 'event'});
             });
-            
+
             // Restrict input to numeric characters (0-9) and plus/minus signs
             $('#%s').on('keypress', function(e) {
                 // Allow all key combinations with Ctrl or Cmd (for copy, paste, select all, etc.)
                 if (e.ctrlKey || e.metaKey) {
                     return true;
                 }
-                
+
                 var char = String.fromCharCode(e.which);
                 // Allow: digits (0-9), plus sign (+), minus sign (-), backspace, delete, tab, escape, enter
-                if (/[0-9+\\-]/.test(char) || 
+                if (/[0-9+\\-]/.test(char) ||
                     e.which === 8 || e.which === 46 || e.which === 9 || e.which === 27 || e.which === 13) {
                     return true;
                 }
                 e.preventDefault();
                 return false;
             });
-            
+
             // Also filter on paste events
             $('#%s').on('paste', function(e) {
                 setTimeout(function() {
@@ -1150,7 +1150,7 @@ sd_question <- function(
       "
       $(document).ready(function() {
         var valueMap = %s;
-        
+
         $('#%s').on('focus mousedown change', function(e) {
           var currentLabel = $(this).val();
 
@@ -1159,7 +1159,7 @@ sd_question <- function(
             window['markInteracted_%s']();
             Shiny.setInputValue('%s_interacted', true, {priority: 'event'});
           }
-          
+
           // Find the internal value that matches this display label
           Shiny.setInputValue('%s', valueMap[currentLabel]);
         });
@@ -1227,7 +1227,7 @@ sd_question <- function(
           window['markInteracted_%s']();
           Shiny.setInputValue('%s_interacted', true, {priority: 'event'});
         });
-        
+
         // Handle value changes
         $('#%s').on('input change slide slidechange', function(event, ui) {
           // Force a string representation for range sliders
@@ -2246,7 +2246,7 @@ sd_output <- function(
     "
     $(document).ready(function() {
       var id = '%s', key = 'surveydown_reactive_' + id;
-      
+
       function save() {
         var content = $('#' + id).html();
         if (content && content.trim()) {
@@ -2257,7 +2257,7 @@ sd_output <- function(
           }
         }
       }
-      
+
       function restore() {
         try {
           var saved = localStorage.getItem(key);
@@ -2269,7 +2269,7 @@ sd_output <- function(
           console.warn('Could not restore from localStorage:', e);
         }
       }
-      
+
       setTimeout(restore, 100);
       new MutationObserver(function() { setTimeout(save, 200); })
         .observe(document.getElementById(id) || document.body, {childList: true, subtree: true});

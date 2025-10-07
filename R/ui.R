@@ -915,22 +915,22 @@ sd_question <- function(
       ...
     )
   } else if (type == "mc") {
-    choice_list <- option_to_choice_names_values(option)
+    choices <- choice_list_html(option)
     output <- shiny::radioButtons(
       inputId = id,
       label = label,
-      choiceNames = choice_list$choiceNames,
-      choiceValues = choice_list$choiceValues,
+      choiceNames = choices$names,
+      choiceValues = choices$values,
       selected = FALSE,
       ...
     )
   } else if (type == "mc_multiple") {
-    choice_list <- option_to_choice_names_values(option)
+    choices <- choice_list_html(option)
     output <- shiny::checkboxGroupInput(
       inputId = id,
       label = label,
-      choiceNames = choice_list$choiceNames,
-      choiceValues = choice_list$choiceValues,
+      choiceNames = choices$names,
+      choiceValues = choices$values,
       selected = FALSE,
       ...
     )
@@ -938,7 +938,7 @@ sd_question <- function(
     output <- shinyWidgets::radioGroupButtons(
       inputId = id,
       label = label,
-      choices = list_name_md_to_html(option),
+      choices = choice_html(option),
       direction = direction,
       selected = character(0),
       ...
@@ -972,7 +972,7 @@ sd_question <- function(
     output <- shinyWidgets::checkboxGroupButtons(
       inputId = id,
       label = label,
-      choices = list_name_md_to_html(option),
+      choices = choice_html(option),
       direction = direction,
       individual = individual,
       justified = FALSE,

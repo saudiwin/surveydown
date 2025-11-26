@@ -28,6 +28,8 @@ sd_question(
   addon = NULL,
   default = NULL,
   yml = "questions.yml",
+  matrix_question_width = "50\%",
+  matrix_option_width = NULL,
   ...
 )
 }
@@ -108,6 +110,12 @@ for the slider. Defaults to the median of values.}
 \item{yml}{Character string. The name of the YAML file to load question configurations from.
 Defaults to \code{"questions.yml"}. Custom YAML files can be specified, either in
 the root directory or subdirectories (e.g., \code{"folder/custom.yml"}).}
+
+\item{matrix_question_width}{Character string. The width of the matrix question column.
+Defaults to \code{"50\%"}.}
+
+\item{matrix_option_width}{Character string. The width of the matrix option column.
+Defaults to \code{NULL}.}
 
 \item{...}{Additional arguments, often specific to different input types.
 Examples include \code{pre}, \code{sep}, \code{step}, and \code{animate} for \code{"slider"} and

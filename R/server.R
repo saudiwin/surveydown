@@ -1115,7 +1115,7 @@ sd_server <- function(db = NULL) {
                     } else {
                         options[options %in% value] |>
                             names() |>
-                            paste(collapse = ", ")
+                            paste(collapse = "|")
                     }
 
                     # Store the values and labels in output
@@ -1187,7 +1187,7 @@ sd_server <- function(db = NULL) {
                     } else {
                         options[options %in% value] |>
                             names() |>
-                            paste(collapse = ", ")
+                            paste(collapse = "|")
                     }
 
                     # Store the values and labels in output
@@ -3516,7 +3516,7 @@ format_question_value <- function(val) {
     if (is.null(val) || identical(val, NA) || identical(val, "NA")) {
         return("")
     } else if (length(val) > 1) {
-        return(paste(val, collapse = ", "))
+        return(paste(val, collapse = "|"))
     } else {
         return(as.character(val))
     }

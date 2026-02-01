@@ -1371,12 +1371,12 @@ sd_question <- function(
 
     # Create colgroup element
     colgroup <- shiny::tags$colgroup(
-        # First column for questions
-        shiny::tags$col(style = paste0("width: ", matrix_question_width, ";")),
-        # Remaining columns for options (auto-distributed)
-        lapply(seq_along(option), function(i) {
-            shiny::tags$col(style = paste0("width: ", matrix_option_width, ";"))
-        })
+      # First column for questions
+      shiny::tags$col(style = paste0("width: ", matrix_question_width, ";")),
+      # Remaining columns for options (auto-distributed)
+      lapply(seq_along(option), function(i) {
+        shiny::tags$col(style = paste0("width: ", matrix_option_width, ";"))
+      })
     )
     header <- shiny::tags$tr(
       shiny::tags$th(""),
@@ -2037,9 +2037,12 @@ sd_close <- function(
               label = label_close,
               class = "sd-enter-button sd-nav-button",
               style = "display: inline-block; margin-right: 10px;",
-              onclick = paste0("Shiny.setInputValue('show_exit_modal', true, {priority: 'event'}); ",
-                              "Shiny.setInputValue('clear_cookies_on_exit', ",
-                              tolower(as.character(clear_cookies)), ", {priority: 'event'});")
+              onclick = paste0(
+                "Shiny.setInputValue('show_exit_modal', true, {priority: 'event'}); ",
+                "Shiny.setInputValue('clear_cookies_on_exit', ",
+                tolower(as.character(clear_cookies)),
+                ", {priority: 'event'});"
+              )
             ),
             shiny::actionButton(
               inputId = restart_button_id,
@@ -2056,9 +2059,12 @@ sd_close <- function(
             label = label_close,
             class = "sd-enter-button sd-nav-button",
             style = "display: inline-block;",
-            onclick = paste0("Shiny.setInputValue('show_exit_modal', true, {priority: 'event'}); ",
-                            "Shiny.setInputValue('clear_cookies_on_exit', ",
-                            tolower(as.character(clear_cookies)), ", {priority: 'event'});")
+            onclick = paste0(
+              "Shiny.setInputValue('show_exit_modal', true, {priority: 'event'}); ",
+              "Shiny.setInputValue('clear_cookies_on_exit', ",
+              tolower(as.character(clear_cookies)),
+              ", {priority: 'event'});"
+            )
           )
         }
       )

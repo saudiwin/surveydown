@@ -727,7 +727,7 @@ extract_head_content <- function(html_content) {
 #'   sd_create_survey(template = "default")
 #'   # This creates survey.qmd and app.R - launch the survey using app.R
 #' }
-#' @importFrom sortsurvey rank_list_survey bucket_list_survey
+#' @importFrom sortsurvey rank_list_survey bucket_list_survey add_rank_list
 #' @importFrom shinyWidgets textInputAddon
 #' @export
 sd_question <- function(
@@ -1037,6 +1037,30 @@ sd_question <- function(
         id,
         id
       )))
+    )
+  } else if (type == "rank_list") {
+    output <- sortsurvey::rank_list_survey(
+      input_id = id,
+      text     = label,
+      labels   = names(option),
+      options  = sortsurvey::sortable_options(direction = direction)
+    )
+  } else if (type == "bucket_list") {
+    output <- sortsurvey::bucket_list_survey(
+      header     = label,
+      group_name = id,
+      sortsurvey::add_rank_list(
+        text   = "Drag from here",
+        labels = names(option)
+      ),
+      sortsurvey::add_rank_list(
+        text   = "to here",
+        labels = NULL
+      ),
+      output_width  = "100%",
+      output_height = "100%",
+      options       = sortsurvey::sortable_options(direction = direction),
+      orientation   = direction
     )
   } else if (type == "text") {
     output <- shiny::textInput(

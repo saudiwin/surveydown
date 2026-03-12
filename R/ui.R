@@ -479,6 +479,24 @@ get_show_previous <- function(metadata) {
   return(parse_yaml_boolean(show_previous))
 }
 
+wrap_row_label <- function(text, max_chars) {
+  if (nchar(text) <= max_chars) return(text)
+  words <- strsplit(text, " ")[[1]]
+  lines <- character(0)
+  current <- ""
+  for (word in words) {
+    candidate <- if (nchar(current) == 0) word else paste(current, word)
+    if (nchar(candidate) > max_chars && nchar(current) > 0) {
+      lines <- c(lines, current)
+      current <- word
+    } else {
+      current <- candidate
+    }
+  }
+  if (nchar(current) > 0) lines <- c(lines, current)
+  paste(lines, collapse = "<br>")
+}
+
 find_all_yaml_files <- function() {
   # Find all yml files
   all_files <- list.files(
@@ -658,6 +676,9 @@ extract_head_content <- function(html_content) {
 #' @param matrix_question_width The width of the matrix question column. Accepts
 #' numeric (e.g., `40`), character without percent (e.g., `"40"`), or character
 #' with percent (e.g., `"40%"`) - all are treated equivalently as percentages.
+#' @param row_max_chars Integer. Maximum number of characters per line for matrix
+#' row labels. When a label exceeds this length, it is wrapped at the nearest
+#' word boundary. Defaults to `NULL` (no wrapping).
 #' Defaults to `NULL`, which auto-calculates the width based on the longest row
 #' label (using a heuristic of 20% base + 0.5% per character, bounded between
 #' 30% and 80%). The remaining width is automatically distributed equally
@@ -755,6 +776,7 @@ sd_question <- function(
   initial_value = NULL,
   addon = NULL,
   matrix_question_width = NULL,
+  row_max_chars = NULL,
   ...
 ) {
   # Handle option/options alias
@@ -1377,6 +1399,11 @@ sd_question <- function(
       shiny::tags$script(htmltools::HTML(js_init))
     )
   } else if (type == "matrix") {
+    # If row is unnamed, use values as both labels and IDs
+    if (!is.null(row) && is.null(names(row))) {
+      names(row) <- row
+    }
+
     # Auto-calculate question column width if not provided
     if (is.null(matrix_question_width)) {
       # Find the longest row label by character count
@@ -1414,8 +1441,12 @@ sd_question <- function(
     )
     rows <- lapply(row, function(q_id) {
       full_id <- paste(id, q_id, sep = "_")
+      row_label <- names(row)[row == q_id]
+      if (!is.null(row_max_chars)) {
+        row_label <- shiny::HTML(wrap_row_label(row_label, row_max_chars))
+      }
       shiny::tags$tr(
-        shiny::tags$td(names(row)[row == q_id]),
+        shiny::tags$td(row_label),
         shiny::tags$td(
           colspan = length(option),
           sd_question(

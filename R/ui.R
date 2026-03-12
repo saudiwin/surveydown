@@ -1407,8 +1407,12 @@ sd_question <- function(
     # Auto-calculate question column width if not provided
     if (is.null(matrix_question_width)) {
       # Find the longest row label by character count
+      # If row_max_chars is set, labels wrap at that width, so cap accordingly
       row_labels <- names(row)
       max_chars <- max(nchar(row_labels))
+      if (!is.null(row_max_chars)) {
+        max_chars <- min(max_chars, row_max_chars)
+      }
       # Estimate width: base 20% + 0.5% per character, bounded between 30% and 80%
       estimated_width <- min(80, max(30, 20 + max_chars * 0.5))
       matrix_question_width <- paste0(estimated_width, "%")

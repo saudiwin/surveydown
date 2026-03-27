@@ -1592,6 +1592,10 @@ extract_question_structure_html <- function(html_content) {
                 grepl(paste0("^", question_id, "_"), input_name)
             ) {
               row_id <- sub(paste0("^", question_id, "_"), "", input_name)
+              # If row_label is empty (unnamed rows), use row_id as key to avoid duplicate empty-string keys in YAML
+              if (nchar(row_label) == 0) {
+                row_label <- row_id
+              }
               rows[[row_label]] <- row_id
             }
           }

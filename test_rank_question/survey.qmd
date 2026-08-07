@@ -6,9 +6,14 @@ warning: false
 ```{r}
 library(surveydown)
 library(sortsurvey)
+library(shiny.i18n)
 ```
 
 ::: {#welcome .sd-page}
+
+```{r}
+sd_output("language_selector")
+```
 
 # Welcome to our survey!
 
@@ -28,36 +33,9 @@ sd_question(
   )
 )
 
-sd_question(
-  type  = 'matrix',
-  id    = 'policy_opinions',
-  label = "How much do you agree with the following policy statements?",
-  row = c(
-    "The government should increase spending on public transportation infrastructure"="q1",
-    "Carbon taxes are an effective way to reduce greenhouse gas emissions"="q2",
-    "Universal basic income would reduce poverty"="q3"
-  ),
-  option = c(
-    "Strongly Agree"    = "strongly_agree",
-    "Agree"             = "agree",
-    "Disagree"          = "disagree",
-    "Strongly Disagree" = "strongly_disagree"
-  ),
-  row_max_chars = 30
-)
+sd_output("policy_opinions", type = "question")
 
-sd_question(
-  type  = 'matrix',
-  id    = 'policy_opinions_unnamed',
-  label = "Unnamed row vector test: How much do you agree?",
-  row = c("q1", "q2", "q3"),
-  option = c(
-    "Strongly Agree"    = "strongly_agree",
-    "Agree"             = "agree",
-    "Disagree"          = "disagree",
-    "Strongly Disagree" = "strongly_disagree"
-  )
-)
+sd_output("policy_opinions_unnamed", type = "question")
 
 sd_question(
   type  = 'rank_list',
@@ -69,26 +47,11 @@ sd_question(
     'Gentoo'    = 'gentoo'
   )
 )
-
-
-
-
-
 ```
 
 # Bucket list style:
 
 ```{r}
-
-# add in drag and drop question
-# horizontal method doesn't seem to work regardless of what width/height is
-# set to
-
-# DOES NOT WORK: input id is only set for bucket top class, 
-# need to set two other input IDs for rank_list objects
-
-# see function bucket_list_survey in sortsurvey https://github.com/saudiwin/sortable_survey/blob/main/R/bucket_list.R
-# and add_rank_list in sortable: https://rstudio.github.io/sortable/reference/add_rank_list.html
 
 sd_question(
   type  = 'bucket_list',
@@ -99,7 +62,7 @@ sd_question(
     'Chinstrap' = 'chinstrap',
     'Gentoo'    = 'gentoo'
   )
-    
+
 )
 
 

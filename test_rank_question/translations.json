@@ -1,0 +1,41 @@
+{
+  "languages": ["en", "ar"],
+  "translation": [
+    {
+      "en": "How much do you agree with the following policy statements?",
+      "ar": "ما مدى موافقتك على البيانات السياسية التالية؟"
+    },
+    {
+      "en": "The government should increase spending on public transportation infrastructure",
+      "ar": "يجب على الحكومة زيادة الإنفاق على البنية التحتية للنقل العام"
+    },
+    {
+      "en": "Carbon taxes are an effective way to reduce greenhouse gas emissions",
+      "ar": "تُعدّ ضرائب الكربون وسيلة فعّالة للحد من انبعاثات الغازات الدفيئة"
+    },
+    {
+      "en": "Universal basic income would reduce poverty",
+      "ar": "سيُسهم الدخل الأساسي الشامل في الحد من الفقر"
+    },
+    {
+      "en": "Strongly Agree",
+      "ar": "أوافق بشدة"
+    },
+    {
+      "en": "Agree",
+      "ar": "أوافق"
+    },
+    {
+      "en": "Disagree",
+      "ar": "لا أوافق"
+    },
+    {
+      "en": "Strongly Disagree",
+      "ar": "لا أوافق بشدة"
+    },
+    {
+      "en": "Which type of penguin do you like the best?",
+      "ar": "أي نوع من البطاريق تفضل؟"
+    }
+  ]
+}

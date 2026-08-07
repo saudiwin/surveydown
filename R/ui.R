@@ -479,24 +479,6 @@ get_show_previous <- function(metadata) {
   return(parse_yaml_boolean(show_previous))
 }
 
-wrap_row_label <- function(text, max_chars) {
-  if (nchar(text) <= max_chars) return(text)
-  words <- strsplit(text, " ")[[1]]
-  lines <- character(0)
-  current <- ""
-  for (word in words) {
-    candidate <- if (nchar(current) == 0) word else paste(current, word)
-    if (nchar(candidate) > max_chars && nchar(current) > 0) {
-      lines <- c(lines, current)
-      current <- word
-    } else {
-      current <- candidate
-    }
-  }
-  if (nchar(current) > 0) lines <- c(lines, current)
-  paste(lines, collapse = "<br>")
-}
-
 find_all_yaml_files <- function() {
   # Find all yml files
   all_files <- list.files(
@@ -676,9 +658,6 @@ extract_head_content <- function(html_content) {
 #' @param matrix_question_width The width of the matrix question column. Accepts
 #' numeric (e.g., `40`), character without percent (e.g., `"40"`), or character
 #' with percent (e.g., `"40%"`) - all are treated equivalently as percentages.
-#' @param row_max_chars Integer. Maximum number of characters per line for matrix
-#' row labels. When a label exceeds this length, it is wrapped at the nearest
-#' word boundary. Defaults to `NULL` (no wrapping).
 #' Defaults to `NULL`, which auto-calculates the width based on the longest row
 #' label (using a heuristic of 20% base + 0.5% per character, bounded between
 #' 30% and 80%). The remaining width is automatically distributed equally
@@ -776,7 +755,6 @@ sd_question <- function(
   initial_value = NULL,
   addon = NULL,
   matrix_question_width = NULL,
-  row_max_chars = NULL,
   ...
 ) {
   # Handle option/options alias
@@ -1399,20 +1377,11 @@ sd_question <- function(
       shiny::tags$script(htmltools::HTML(js_init))
     )
   } else if (type == "matrix") {
-    # If row is unnamed, use values as both labels and IDs
-    if (!is.null(row) && is.null(names(row))) {
-      names(row) <- row
-    }
-
     # Auto-calculate question column width if not provided
     if (is.null(matrix_question_width)) {
       # Find the longest row label by character count
-      # If row_max_chars is set, labels wrap at that width, so cap accordingly
       row_labels <- names(row)
       max_chars <- max(nchar(row_labels))
-      if (!is.null(row_max_chars)) {
-        max_chars <- min(max_chars, row_max_chars)
-      }
       # Estimate width: base 20% + 0.5% per character, bounded between 30% and 80%
       estimated_width <- min(80, max(30, 20 + max_chars * 0.5))
       matrix_question_width <- paste0(estimated_width, "%")
@@ -1443,14 +1412,18 @@ sd_question <- function(
       shiny::tags$th(""),
       lapply(names(option), function(opt) shiny::tags$th(opt))
     )
+    # Set a flag so that nested sd_question(type='mc') calls inside each row
+    # return HTML directly instead of creating their own renderUI outputs.
+    # This is needed when sd_question(type='matrix') is called in a reactive context.
+    .row_domain <- shiny::getDefaultReactiveDomain()
+    if (!is.null(.row_domain)) {
+      .row_domain$userData$.building_matrix_rows <- TRUE
+    }
+
     rows <- lapply(row, function(q_id) {
       full_id <- paste(id, q_id, sep = "_")
-      row_label <- names(row)[row == q_id]
-      if (!is.null(row_max_chars)) {
-        row_label <- shiny::HTML(wrap_row_label(row_label, row_max_chars))
-      }
       shiny::tags$tr(
-        shiny::tags$td(row_label),
+        shiny::tags$td(names(row)[row == q_id]),
         shiny::tags$td(
           colspan = length(option),
           sd_question(
@@ -1464,6 +1437,12 @@ sd_question <- function(
         )
       )
     })
+
+    # Reset flag so the outer sd_question(type='matrix') still goes through
+    # the reactive renderUI path when it reaches its own reactive context check.
+    if (!is.null(.row_domain)) {
+      .row_domain$userData$.building_matrix_rows <- FALSE
+    }
 
     output <- shiny::div(
       class = "matrix-question-container",
@@ -1484,12 +1463,13 @@ sd_question <- function(
     c("slider", "slider_numeric", "date", "daterange"))
   output_div <- make_question_container(id, output, width, auto_interaction)
 
-  if (!is.null(shiny::getDefaultReactiveDomain())) {
+  .domain <- shiny::getDefaultReactiveDomain()
+  if (!is.null(.domain) && !isTRUE(.domain$userData$.building_matrix_rows)) {
     # In a reactive context, directly add to output with renderUI
     # Use "_question" suffix to avoid input/output ID conflicts
-    shiny::isolate({
-      session <- shiny::getDefaultReactiveDomain()
+    session <- .domain
 
+    shiny::isolate({
       # Store metadata for reactive questions to enable restoration on Previous button
       if (is.null(session$userData$reactive_question_metadata)) {
         session$userData$reactive_question_metadata <- list()
@@ -1525,12 +1505,62 @@ sd_question <- function(
 
       session$userData$reactive_question_metadata[[id]] <- metadata
 
+      # For reactive matrix questions: initialize subquestion IDs in all_data
+      # (observer creation must happen outside isolate — see below)
+      if (
+        !is.null(row) &&
+          !is.null(session$userData$all_data) &&
+          !is.null(session$userData$changed_fields)
+      ) {
+        all_data_rv <- session$userData$all_data
+        for (row_val in unname(row)) {
+          lsubq <- paste0(id, "_", row_val)
+          if (is.null(all_data_rv[[lsubq]])) {
+            all_data_rv[[lsubq]] <- ""
+          }
+        }
+      }
+
       output_div <- shiny::tags$div(output)
       output <- shiny::getDefaultReactiveDomain()$output
       output[[paste0(id, "_question")]] <- shiny::renderUI({
         output_div
       })
     })
+
+    # For reactive matrix questions: create saving observers outside isolate.
+    # observeEvent cannot be created inside shiny::isolate().
+    if (
+      !is.null(row) &&
+        !is.null(session$userData$all_data) &&
+        !is.null(session$userData$changed_fields)
+    ) {
+      all_data_rv <- session$userData$all_data
+      changed_fields_rv <- session$userData$changed_fields
+      for (row_val in unname(row)) {
+        local({
+          lsubq <- paste0(id, "_", row_val)
+          shiny::observeEvent(
+            session$input[[lsubq]],
+            {
+              value <- session$input[[lsubq]]
+              formatted <- if (is.null(value) || identical(value, NA)) {
+                ""
+              } else if (length(value) > 1) {
+                paste(value, collapse = "|")
+              } else {
+                as.character(value)
+              }
+              all_data_rv[[lsubq]] <- formatted
+              changed_fields_rv(c(changed_fields_rv(), lsubq))
+            },
+            ignoreNULL = FALSE,
+            ignoreInit = TRUE
+          )
+        })
+      }
+    }
+
   } else {
     # If not in a reactive context, just return the element
     return(output_div)

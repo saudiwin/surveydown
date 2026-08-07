@@ -154,11 +154,12 @@ $(document).ready(function() {
         var $this = $(this);
         var inputName = $this.attr('name') || $this.attr('id');
         
-        // Always try to remove highlighting from question container first
-        var questionContainer = $this.closest('.question-container');
-        if (questionContainer.length > 0) {
-            questionContainer.removeClass('unanswered-question-highlight unanswered-question-highlight-orange unanswered-question-highlight-green unanswered-question-highlight-purple unanswered-question-highlight-gray required-question-highlight validation-question-highlight');
-        }
+        // Remove highlighting from all ancestor question containers.
+        // Using .parents() instead of .closest() ensures that nested containers
+        // (e.g., matrix row containers inside an outer reactive question container)
+        // are all de-highlighted when the user interacts with an input.
+        var highlightClasses = 'unanswered-question-highlight unanswered-question-highlight-orange unanswered-question-highlight-green unanswered-question-highlight-purple unanswered-question-highlight-gray required-question-highlight validation-question-highlight';
+        $this.parents('.question-container').removeClass(highlightClasses);
         
         // For radio buttons, also check if this is a matrix subquestion and handle the radio group
         if ($this.is('input[type="radio"]') && inputName && inputName.includes('_')) {

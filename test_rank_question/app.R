@@ -1,15 +1,5 @@
-# remotes::install_github("surveydown-dev/surveydown", force = TRUE)
 library(surveydown)
-
-# Database setup
-
-# surveydown stores data on a database that you define at https://supabase.com/
-# To connect to a database, update the sd_database() function with details
-# from your supabase database. For this demo, we set ignore = TRUE, which will
-# ignore the settings and won't attempt to connect to the database. This is
-# helpful for local testing if you don't want to record testing data in the
-# database table. See the documentation for details:
-# https://surveydown.org/store-data
+library(shiny.i18n)
 
 db <- sd_database(
   host   = "",
@@ -20,22 +10,81 @@ db <- sd_database(
   ignore = TRUE
 )
 
+i18n <- shiny.i18n::Translator$new(translation_json_path = "translations.json")
+i18n$set_translation_language("en")
 
-# Server setup
 server <- function(input, output, session) {
 
-  # Define any conditional skip logic here (skip to page if a condition is true)
-  sd_skip_if()
+  output$language_selector <- shiny::renderUI({
+    shiny::selectInput(
+      "selected_language",
+      "Language / اللغة:",
+      choices = c("English" = "en", "Arabic / عربي" = "ar"),
+      selected = "en"
+    )
+  })
 
-  # Define any conditional display logic here (show a question if a condition is true)
+  translator <- reactive({
+    lang <- input$selected_language
+    if (!is.null(lang)) {
+      i18n$set_translation_language(lang)
+    }
+    i18n
+  })
+
+  # Define matrix questions reactively using shiny.i18n, same pattern as saudi_swf
+  # Labels are used as both names and values (names(labels) <- labels)
+
+  observe({
+
+    policy_labels <- translator()$t(c(
+    "The government should increase spending on public transportation infrastructure",
+    "Carbon taxes are an effective way to reduce greenhouse gas emissions",
+    "Universal basic income would reduce poverty"
+  ))
+  names(policy_labels) <- policy_labels
+
+  sd_question(
+    type   = 'matrix',
+    id     = 'policy_opinions',
+    label  = translator()$t("How much do you agree with the following policy statements?"),
+    row    = policy_labels,
+    option = c(
+      "Strongly Agree"    = "strongly_agree",
+      "Agree"             = "agree",
+      "Disagree"          = "disagree",
+      "Strongly Disagree" = "strongly_disagree"
+    )
+  )
+
+  # Unnamed row test (same as before, but also reactive)
+  unnamed_labels <- c("q1", "q2", "q3")
+
+  sd_question(
+    type   = 'matrix',
+    id     = 'policy_opinions_unnamed',
+    label  = "Unnamed row vector test: How much do you agree?",
+    row    = unnamed_labels,
+    option = c(
+      "Strongly Agree"    = "strongly_agree",
+      "Agree"             = "agree",
+      "Disagree"          = "disagree",
+      "Strongly Disagree" = "strongly_disagree"
+    )
+  )
+
+
+  })
+
+  
+
+  sd_skip_if()
   sd_show_if()
 
-  # Database designation and other settings
   sd_server(
     db = db
   )
 
 }
 
-# shinyApp() initiates your app - don't change it
 shiny::shinyApp(ui = sd_ui(), server = server)
